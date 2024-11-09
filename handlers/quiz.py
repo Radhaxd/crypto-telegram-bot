@@ -1,9 +1,11 @@
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from database.db import save_quiz_score, get_leaderboard
+from database.db import save_quiz_score, get_leaderboard, get_user, update_user
 import random
+import asyncio
 
+# This is a sample of 10 questions. In a real scenario, you'd have 10,000+ questions stored in a database.
 quiz_questions = [
     {
         "question": "What is the maximum supply of Bitcoin?",
@@ -15,11 +17,53 @@ quiz_questions = [
         "options": ["Ethereum", "Litecoin", "Ripple", "Dogecoin"],
         "correct_answer": 1
     },
-    # Add more questions here
+    {
+        "question": "Who is the creator of Bitcoin?",
+        "options": ["Vitalik Buterin", "Charlie Lee", "Satoshi Nakamoto", "Roger Ver"],
+        "correct_answer": 2
+    },
+    {
+        "question": "What is the process of creating new cryptocurrencies called?",
+        "options": ["Minting", "Mining", "Forging", "Staking"],
+        "correct_answer": 1
+    },
+    {
+        "question": "Which consensus mechanism does Bitcoin use?",
+        "options": ["Proof of Stake", "Proof of Work", "Delegated Proof of Stake", "Proof of Authority"],
+        "correct_answer": 1
+    },
+    {
+        "question": "What is a 'hard fork' in cryptocurrency?",
+        "options": ["A type of wallet", "A software upgrade", "A mining tool", "A type of exchange"],
+        "correct_answer": 1
+    },
+    {
+        "question": "Which cryptocurrency was created as a joke but gained significant value?",
+        "options": ["Bitcoin Cash", "Ethereum Classic", "Dogecoin", "Litecoin"],
+        "correct_answer": 2
+    },
+    {
+        "question": "What is the name of Ethereum's upcoming upgrade to Proof of Stake?",
+        "options": ["Ethereum 2.0", "Casper", "Serenity", "Metropolis"],
+        "correct_answer": 0
+    },
+    {
+        "question": "What is a 'whale' in cryptocurrency terms?",
+        "options": ["A type of blockchain", "A large holder of a particular cryptocurrency", "A mining pool", "A decentralized exchange"],
+        "correct_answer": 1
+    },
+    {
+        "question": "What does 'HODL' stand for in the crypto community?",
+        "options": ["Hold On for Dear Life", "Hope Our Deposits Last", "Have Only Doge Loyalty", "High-Octane Day-Long"],
+        "correct_answer": 0
+    },
 ]
 
 @Client.on_message(filters.command("quiz"))
 async def start_quiz(client, message):
+    await send_quiz(client, message.chat.id)
+
+async def send_quiz(client, chat_id):
     question = random.choice(quiz_questions)
     options = question["options"]
     
@@ -28,8 +72,9 @@ async def start_quiz(client, message):
         for i, option in enumerate(options)
     ])
     
-    await message.reply_text(
-        f"🧩 Crypto Quiz\n\n{question['question']}",
+    await client.send_message(
+        chat_id=chat_id,
+        text=f"🧩 Crypto Quiz\n\n{question['question']}",
         reply_markup=keyboard
     )
 
@@ -61,3 +106,28 @@ async def show_leaderboard(client, message):
         response += f"{i}. User {entry['user_id']}: {entry['score']} points\n"
     
     await message.reply_text(response)
+
+@Client.on_message(filters.command(["enable_quiz", "disable_quiz"]) & filters.group)
+async def toggle_auto_quiz(client, message):
+    chat_id = message.chat.id
+    action = message.text.split()[0][1:].split('_')[0]  # 'enable' or 'disable'
+    
+    chat_data = await get_user(chat_id)
+    if not chat_data:
+        chat_data = {"chat_id": chat_id}
+    
+    chat_data["auto_quiz_enabled"] = (action == "enable")
+    await update_user(chat_id, chat_data)
+    
+    await message.reply_text(f"Auto quiz has been {action}d for this group.")
+
+async def auto_quiz_task():
+    while True:
+        # In a real scenario, you'd fetch all groups with auto_quiz_enabled from the database
+        # For demonstration, we'll use a dummy group ID
+        group_id = -1001234567890
+        await send_quiz(Client, group_id)
+        await asyncio.sleep(600)  # Wait for 10 minutes
+
+# Add this to your main bot file to start the auto quiz task
+# asyncio.create_task(auto_quiz_task())
