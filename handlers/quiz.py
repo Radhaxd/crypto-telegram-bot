@@ -1,63 +1,14 @@
 
+import json
+import random
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from database.db import save_quiz_score, get_leaderboard, get_user, update_user
-import random
-import asyncio
 
-# This is a sample of 10 questions. In a real scenario, you'd have 10,000+ questions stored in a database.
-quiz_questions = [
-    {
-        "question": "What is the maximum supply of Bitcoin?",
-        "options": ["21 million", "18 million", "100 million", "1 billion"],
-        "correct_answer": 0
-    },
-    {
-        "question": "Which cryptocurrency is known as 'digital silver'?",
-        "options": ["Ethereum", "Litecoin", "Ripple", "Dogecoin"],
-        "correct_answer": 1
-    },
-    {
-        "question": "Who is the creator of Bitcoin?",
-        "options": ["Vitalik Buterin", "Charlie Lee", "Satoshi Nakamoto", "Roger Ver"],
-        "correct_answer": 2
-    },
-    {
-        "question": "What is the process of creating new cryptocurrencies called?",
-        "options": ["Minting", "Mining", "Forging", "Staking"],
-        "correct_answer": 1
-    },
-    {
-        "question": "Which consensus mechanism does Bitcoin use?",
-        "options": ["Proof of Stake", "Proof of Work", "Delegated Proof of Stake", "Proof of Authority"],
-        "correct_answer": 1
-    },
-    {
-        "question": "What is a 'hard fork' in cryptocurrency?",
-        "options": ["A type of wallet", "A software upgrade", "A mining tool", "A type of exchange"],
-        "correct_answer": 1
-    },
-    {
-        "question": "Which cryptocurrency was created as a joke but gained significant value?",
-        "options": ["Bitcoin Cash", "Ethereum Classic", "Dogecoin", "Litecoin"],
-        "correct_answer": 2
-    },
-    {
-        "question": "What is the name of Ethereum's upcoming upgrade to Proof of Stake?",
-        "options": ["Ethereum 2.0", "Casper", "Serenity", "Metropolis"],
-        "correct_answer": 0
-    },
-    {
-        "question": "What is a 'whale' in cryptocurrency terms?",
-        "options": ["A type of blockchain", "A large holder of a particular cryptocurrency", "A mining pool", "A decentralized exchange"],
-        "correct_answer": 1
-    },
-    {
-        "question": "What does 'HODL' stand for in the crypto community?",
-        "options": ["Hold On for Dear Life", "Hope Our Deposits Last", "Have Only Doge Loyalty", "High-Octane Day-Long"],
-        "correct_answer": 0
-    },
-]
+# Load quiz questions from JSON file
+with open('data/quiz_questions.json', 'r') as f:
+    quiz_questions = json.load(f)
 
 @Client.on_message(filters.command("quiz"))
 async def start_quiz(client, message):
