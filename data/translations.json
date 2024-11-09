@@ -3,12 +3,28 @@
     "welcome_message": "Welcome to the Crypto Bot!",
     "quiz_question": "Crypto Quiz Question:",
     "correct_answer": "Correct answer!",
-    "wrong_answer": "Wrong answer. The correct answer is:"
+    "wrong_answer": "Wrong answer. The correct answer is:",
+    "convert_result": "✨ {amount} {from_currency} = {converted_amount} {to_currency}",
+    "current_price": "✨ Current {currency} Price: ${price}",
+    "info_response": "💰 {name} ({symbol})\\n\\nCurrent Price: ${price}\\nMarket Cap: ${market_cap}\\n24h Change: {change}%\\nAll Time High: ${ath}\\nAll Time Low: ${atl}",
+    "top_crypto_header": "🏆 Top 10 Cryptocurrencies by Market Cap:",
+    "rate_limit_exceeded": "You're using this command too frequently. Please wait a moment and try again.",
+    "command_not_found": "Command not found. Use /help to see available commands.",
+    "language_set": "Language has been set to English.",
+    "favorite_crypto_set": "Your favorite cryptocurrency has been set to {crypto}."
   },
   "es": {
     "welcome_message": "¡Bienvenido al Bot de Criptomonedas!",
     "quiz_question": "Pregunta del Cuestionario de Criptomonedas:",
     "correct_answer": "¡Respuesta correcta!",
-    "wrong_answer": "Respuesta incorrecta. La respuesta correcta es:"
+    "wrong_answer": "Respuesta incorrecta. La respuesta correcta es:",
+    "convert_result": "✨ {amount} {from_currency} = {converted_amount} {to_currency}",
+    "current_price": "✨ Precio actual de {currency}: ${price}",
+    "info_response": "💰 {name} ({symbol})\\n\\nPrecio actual: ${price}\\nCapitalización de mercado: ${market_cap}\\nCambio en 24h: {change}%\\nMáximo histórico: ${ath}\\nMínimo histórico: ${atl}",
+    "top_crypto_header": "🏆 Top 10 Criptomonedas por Capitalización de Mercado:",
+    "rate_limit_exceeded": "Estás usando este comando con demasiada frecuencia. Por favor, espera un momento e intenta de nuevo.",
+    "command_not_found": "Comando no encontrado. Usa /help para ver los comandos disponibles.",
+    "language_set": "El idioma se ha configurado a Español.",
+    "favorite_crypto_set": "Tu criptomoneda favorita se ha configurado a {crypto}."
   }
 }

@@ -14,10 +14,11 @@ class I18n:
         except Exception as e:
             main_logger.error(f"Error loading translations: {str(e)}", exc_info=True)
 
-    def get_text(self, key, language='en'):
+    def get_text(self, key, language='en', **kwargs):
         if language not in self.translations:
             language = self.default_language
-        return self.translations.get(language, {}).get(key, key)
+        text = self.translations.get(language, {}).get(key, key)
+        return text.format(**kwargs) if kwargs else text
 
 i18n = I18n()
 i18n.load_translations('data/translations.json')
