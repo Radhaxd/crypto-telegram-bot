@@ -2,53 +2,43 @@
 from pyrogram import Client, filters
 from database.db import get_user, create_user, update_user
 
-@Client.on_message(filters.private)
-async def handle_private_message(client, message):
-    user = await get_user(message.from_user.id)
-    if not user:
-        user_data = {
-            "user_id": message.from_user.id,
-            "username": message.from_user.username,
-            "first_name": message.from_user.first_name,
-            "last_name": message.from_user.last_name,
-            "joined_date": message.date
-        }
-        await create_user(user_data)
+@Client.on_message(filters.new_chat_members)
+async def welcome_new_members(client, message):
+    new_members = message.new_chat_members
+    for member in new_members:
+        if member.is_self:  # Check if the new member is our bot
+            welcome_text = (
+                "👋 Hello! I'm CryptoQuizBot, your friendly cryptocurrency quiz master. 🤖\n\n"
+                "Here's what I can do:\n"
+                "• Send automatic quizzes (when enabled)\n"
+                "• Provide crypto conversions\n"
+                "• Share the latest crypto news\n\n"
+                "To enable automatic quizzes, an admin can use the command /enable_quiz.\n"
+                "To disable, use /disable_quiz.\n"
+                "To set quiz interval, use /set_quiz_interval [minutes].\n\n"
+                "Enjoy learning about crypto! 🚀"
+            )
+            await message.reply_text(welcome_text)
 
-@Client.on_message(filters.command("settings"))
-async def user_settings(client, message):
-    user = await get_user(message.from_user.id)
-    if not user:
-        await message.reply_text("You don't have any settings yet.")
+@Client.on_message(filters.command("set_quiz_interval") & filters.group)
+async def set_quiz_interval(client, message):
+    if len(message.text.split()) != 2:
+        await message.reply_text("Usage: /set_quiz_interval [minutes]")
         return
 
-    settings_text = "Your current settings:\n"
-    for key, value in user.items():
-        if key.startswith("setting_"):
-            settings_text += f"{key[8:]}: {value}\n"
-
-    await message.reply_text(settings_text)
-
-@Client.on_message(filters.command("set"))
-async def set_user_setting(client, message):
-    if len(message.text.split()) != 3:
-        await message.reply_text("Usage: /set [setting_name] [value]")
+    try:
+        interval = int(message.text.split()[1])
+        if interval < 1:
+            raise ValueError("Interval must be at least 1 minute")
+    except ValueError:
+        await message.reply_text("Please provide a valid number of minutes (minimum 1).")
         return
 
-    _, setting_name, value = message.text.split()
-    await update_user(message.from_user.id, {f"setting_{setting_name}": value})
-    await message.reply_text(f"Setting '{setting_name}' has been updated to '{value}'.")
+    chat_id = message.chat.id
+    chat_data = await get_user(chat_id) or {"chat_id": chat_id}
+    chat_data["quiz_interval"] = interval
+    await update_user(chat_id, chat_data)
 
-@Client.on_message(filters.command("stats"))
-async def user_stats(client, message):
-    user = await get_user(message.from_user.id)
-    if not user:
-        await message.reply_text("No stats available.")
-        return
+    await message.reply_text(f"Quiz interval has been set to {interval} minutes for this group.")
 
-    stats_text = "Your stats:\n"
-    stats_text += f"Quiz Score: {user.get('quiz_score', 0)}\n"
-    stats_text += f"Conversions Made: {user.get('conversions_made', 0)}\n"
-    stats_text += f"News Articles Read: {user.get('news_read', 0)}\n"
-
-    await message.reply_text(stats_text)
+# ... (keep the existing user management code)

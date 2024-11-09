@@ -2,27 +2,28 @@
 import json
 import random
 import asyncio
+from datetime import datetime, timedelta
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from database.db import save_quiz_score, get_leaderboard, get_user, update_user
 
-# Load quiz questions from JSON file
-try:
-    with open('data/quiz_questions.json', 'r') as f:
-        quiz_questions = json.load(f)
-    print(f"Loaded {len(quiz_questions)} quiz questions successfully.")
-except FileNotFoundError:
-    print("Error: quiz_questions.json file not found. Please ensure the file exists in the 'data' directory.")
-    quiz_questions = []
-except json.JSONDecodeError:
-    print("Error: Invalid JSON in quiz_questions.json. Please check the file format.")
-    quiz_questions = []
+# ... (keep the existing quiz loading code)
 
-# ... (rest of the quiz handler code remains the same)
-async def start_quiz(client, message):
-    await send_quiz(client, message.chat.id)
+MAX_DAILY_QUIZZES = 50  # Set the maximum number of daily quizzes
 
 async def send_quiz(client, chat_id):
+    chat_data = await get_user(chat_id) or {"chat_id": chat_id}
+    
+    # Check daily quiz limit
+    today = datetime.now().date()
+    if chat_data.get('last_quiz_date') != str(today):
+        chat_data['last_quiz_date'] = str(today)
+        chat_data['daily_quiz_count'] = 0
+    
+    if chat_data.get('daily_quiz_count', 0) >= MAX_DAILY_QUIZZES:
+        await client.send_message(chat_id, f"Daily quiz limit ({MAX_DAILY_QUIZZES}) reached. Try again tomorrow!")
+        return
+
     question = random.choice(quiz_questions)
     options = question["options"]
     
@@ -37,56 +38,21 @@ async def send_quiz(client, chat_id):
         reply_markup=keyboard
     )
 
-@Client.on_callback_query(filters.regex("^quiz_"))
-async def handle_quiz_answer(client, callback_query):
-    _, selected_answer, correct_answer = callback_query.data.split("_")
-    selected_answer = int(selected_answer)
-    correct_answer = int(correct_answer)
-    
-    if selected_answer == correct_answer:
-        response = "✅ Correct! Well done!"
-        await save_quiz_score(callback_query.from_user.id, 1)
-    else:
-        response = f"❌ Oops! The correct answer was: {quiz_questions[0]['options'][correct_answer]}"
-    
-    await callback_query.answer(response, show_alert=True)
-    await callback_query.message.reply_text(response)
-
-@Client.on_message(filters.command("leaderboard"))
-async def show_leaderboard(client, message):
-    leaderboard = await get_leaderboard()
-    
-    if not leaderboard:
-        await message.reply_text("No quiz scores recorded yet!")
-        return
-    
-    response = "🏆 Crypto Quiz Leaderboard 🏆\n\n"
-    for i, entry in enumerate(leaderboard, 1):
-        response += f"{i}. User {entry['user_id']}: {entry['score']} points\n"
-    
-    await message.reply_text(response)
-
-@Client.on_message(filters.command(["enable_quiz", "disable_quiz"]) & filters.group)
-async def toggle_auto_quiz(client, message):
-    chat_id = message.chat.id
-    action = message.text.split()[0][1:].split('_')[0]  # 'enable' or 'disable'
-    
-    chat_data = await get_user(chat_id)
-    if not chat_data:
-        chat_data = {"chat_id": chat_id}
-    
-    chat_data["auto_quiz_enabled"] = (action == "enable")
+    chat_data['daily_quiz_count'] = chat_data.get('daily_quiz_count', 0) + 1
     await update_user(chat_id, chat_data)
-    
-    await message.reply_text(f"Auto quiz has been {action}d for this group.")
+
+# ... (keep the existing quiz handler code)
 
 async def auto_quiz_task():
     while True:
-        # In a real scenario, you'd fetch all groups with auto_quiz_enabled from the database
-        # For demonstration, we'll use a dummy group ID
-        group_id = -1001234567890
-        await send_quiz(Client, group_id)
-        await asyncio.sleep(600)  # Wait for 10 minutes
+        groups = await get_auto_quiz_groups()
+        for group in groups:
+            chat_data = await get_user(group['chat_id'])
+            interval = chat_data.get('quiz_interval', 10)  # Default to 10 minutes if not set
+            if (datetime.now() - chat_data.get('last_quiz_time', datetime.min)).total_seconds() >= interval * 60:
+                await send_quiz(Client, group['chat_id'])
+                chat_data['last_quiz_time'] = datetime.now()
+                await update_user(group['chat_id'], chat_data)
+        await asyncio.sleep(60)  # Check every minute
 
-# Add this to your main bot file to start the auto quiz task
-# asyncio.create_task(auto_quiz_task())
+# ... (keep the rest of the quiz handler code)

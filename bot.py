@@ -8,16 +8,9 @@ from handlers.start import start_command, handle_start_options
 from handlers.quiz import start_quiz, handle_quiz_answer, show_leaderboard, toggle_auto_quiz, auto_quiz_task, send_quiz
 from handlers.news import get_news, periodic_news_update
 from handlers.admin import broadcast_message, handle_broadcast_response, moderate_user, toggle_feature
-from handlers.user_management import handle_private_message, user_settings, set_user_setting, user_stats
+from handlers.user_management import handle_private_message, user_settings, set_user_setting, user_stats, welcome_new_members, set_quiz_interval
 
 app = Client("crypto_bot", api_id=config.API_ID, api_hash=config.API_HASH, bot_token=config.BOT_TOKEN)
-
-async def auto_quiz_task_wrapper():
-    while True:
-        groups = await get_auto_quiz_groups()
-        for group in groups:
-            await send_quiz(app, group['chat_id'])
-        await asyncio.sleep(600)  # Wait for 10 minutes
 
 async def main():
     print("Initializing database...")
@@ -41,13 +34,15 @@ async def main():
     app.add_handler(user_settings)
     app.add_handler(set_user_setting)
     app.add_handler(user_stats)
+    app.add_handler(welcome_new_members)
+    app.add_handler(set_quiz_interval)
 
     print("Starting bot...")
     await app.start()
     
     print("Starting periodic tasks...")
     asyncio.create_task(periodic_news_update())
-    asyncio.create_task(auto_quiz_task_wrapper())
+    asyncio.create_task(auto_quiz_task())
 
     print("Bot is running. Press Ctrl+C to stop.")
     await idle()
