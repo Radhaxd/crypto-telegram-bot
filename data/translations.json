@@ -1,0 +1,14 @@
+{
+  "en": {
+    "welcome_message": "Welcome to the Crypto Bot!",
+    "quiz_question": "Crypto Quiz Question:",
+    "correct_answer": "Correct answer!",
+    "wrong_answer": "Wrong answer. The correct answer is:"
+  },
+  "es": {
+    "welcome_message": "¡Bienvenido al Bot de Criptomonedas!",
+    "quiz_question": "Pregunta del Cuestionario de Criptomonedas:",
+    "correct_answer": "¡Respuesta correcta!",
+    "wrong_answer": "Respuesta incorrecta. La respuesta correcta es:"
+  }
+}

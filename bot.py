@@ -10,7 +10,10 @@ from handlers.news import get_news, periodic_news_update
 from handlers.admin import broadcast_message, handle_broadcast_response, moderate_user, toggle_feature
 from handlers.user_management import handle_private_message, user_settings, set_user_setting, user_stats, welcome_new_members, set_quiz_interval
 from handlers.crypto_features import crypto_info, top_cryptocurrencies
+from handlers.inline_query import inline_query
 from utils.logger import main_logger
+from utils.i18n import i18n
+from utils.rate_limit import rate_limit
 
 app = Client("crypto_bot", api_id=config.API_ID, api_hash=config.API_HASH, bot_token=config.BOT_TOKEN)
 
@@ -41,6 +44,7 @@ async def main():
         app.add_handler(set_quiz_interval)
         app.add_handler(crypto_info)
         app.add_handler(top_cryptocurrencies)
+        app.add_handler(inline_query)
 
         main_logger.info("Starting bot...")
         await app.start()
