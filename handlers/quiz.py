@@ -7,10 +7,18 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from database.db import save_quiz_score, get_leaderboard, get_user, update_user
 
 # Load quiz questions from JSON file
-with open('data/quiz_questions.json', 'r') as f:
-    quiz_questions = json.load(f)
+try:
+    with open('data/quiz_questions.json', 'r') as f:
+        quiz_questions = json.load(f)
+    print(f"Loaded {len(quiz_questions)} quiz questions successfully.")
+except FileNotFoundError:
+    print("Error: quiz_questions.json file not found. Please ensure the file exists in the 'data' directory.")
+    quiz_questions = []
+except json.JSONDecodeError:
+    print("Error: Invalid JSON in quiz_questions.json. Please check the file format.")
+    quiz_questions = []
 
-@Client.on_message(filters.command("quiz"))
+# ... (rest of the quiz handler code remains the same)
 async def start_quiz(client, message):
     await send_quiz(client, message.chat.id)
 

@@ -41,3 +41,7 @@ async def save_news(news_data):
 async def get_latest_news(limit=5):
     cursor = db.news.find().sort("published_at", -1).limit(limit)
     return await cursor.to_list(length=limit)
+
+async def get_auto_quiz_groups():
+    cursor = db.users.find({"auto_quiz_enabled": True})
+    return await cursor.to_list(length=None)
