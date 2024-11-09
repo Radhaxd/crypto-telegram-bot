@@ -13,58 +13,53 @@ async def init_db():
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
 
-async def get_user(user_id):
-    return await db.users.find_one({"user_id": user_id})
+# ... (keep existing database functions)
 
-async def create_user(user_data):
-    await db.users.insert_one(user_data)
+async def add_price_alert(user_id, crypto, price, condition):
+    alert = {
+        "user_id": user_id,
+        "crypto": crypto,
+        "price": price,
+        "condition": condition,
+        "created_at": datetime.now()
+    }
+    result = await db.price_alerts.insert_one(alert)
+    return result.inserted_id
 
-async def update_user(user_id, update_data):
-    await db.users.update_one({"user_id": user_id}, {"$set": update_data})
+async def remove_price_alert(user_id, alert_id):
+    result = await db.price_alerts.delete_one({"_id": alert_id, "user_id": user_id})
+    return result.deleted_count > 0
 
-async def get_all_users():
-    cursor = db.users.find()
+async def get_user_alerts(user_id):
+    cursor = db.price_alerts.find({"user_id": user_id})
     return await cursor.to_list(length=None)
 
-async def get_user_stats():
-    total_users = await db.users.count_documents({})
-    active_users = await db.users.count_documents({"last_activity": {"$gte": datetime.now() - timedelta(days=1)}})
-    total_quizzes = await db.quiz_scores.count_documents({})
-    total_conversions = await db.conversions.count_documents({})
+async def get_all_active_alerts():
+    cursor = db.price_alerts.find()
+    return await cursor.to_list(length=None)
 
-    return {
-        "total_users": total_users,
-        "active_users": active_users,
-        "total_quizzes": total_quizzes,
-        "total_conversions": total_conversions
-    }
+async def get_user_balance(user_id):
+    user = await db.users.find_one({"user_id": user_id})
+    return user.get("balance", 1000)  # Default starting balance of $1000
 
-async def save_quiz_score(user_id, score):
-    await db.quiz_scores.update_one(
+async def update_user_balance(user_id, new_balance):
+    await db.users.update_one(
         {"user_id": user_id},
-        {"$inc": {"score": score}},
+        {"$set": {"balance": new_balance}},
         upsert=True
     )
 
-async def get_leaderboard(limit=10):
-    cursor = db.quiz_scores.find().sort("score", -1).limit(limit)
-    return await cursor.to_list(length=limit)
-
-async def save_conversion(user_id, from_currency, to_currency, amount):
-    await db.conversions.insert_one({
+async def add_trade(user_id, trade_type, crypto, amount, price):
+    trade = {
         "user_id": user_id,
-        "from_currency": from_currency,
-        "to_currency": to_currency,
+        "type": trade_type,
+        "crypto": crypto,
         "amount": amount,
+        "price": price,
         "timestamp": datetime.now()
-    })
+    }
+    await db.trades.insert_one(trade)
 
-async def get_user_preferences(user_id):
-    user = await get_user(user_id)
-    return user.get('preferences', {})
-
-async def update_user_preferences(user_id, preferences):
-    await db.users.update_one(
-        {"user_id": user_id},
-        {"$set": {"preferences": preferences}}
-    )
+async def get_user_trades(user_id):
+    cursor = db.trades.find({"user_id": user_id})
+    return await cursor.to_list(length=None)

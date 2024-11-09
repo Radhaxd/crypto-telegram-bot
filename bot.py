@@ -12,6 +12,8 @@ from handlers.user_management import handle_private_message, welcome_new_members
 from handlers.crypto_features import crypto_info, top_cryptocurrencies
 from handlers.inline_query import inline_query
 from handlers.user_preferences import user_settings, set_language, set_favorite_crypto
+from handlers.price_alerts import set_price_alert, remove_price_alert, list_user_alerts, check_price_alerts
+from handlers.trading_sim import check_balance, buy_crypto, sell_crypto, view_portfolio
 from utils.logger import main_logger
 from utils.i18n import i18n
 from utils.rate_limit import rate_limit
@@ -45,6 +47,13 @@ async def main():
         app.add_handler(user_settings)
         app.add_handler(set_language)
         app.add_handler(set_favorite_crypto)
+        app.add_handler(set_price_alert)
+        app.add_handler(remove_price_alert)
+        app.add_handler(list_user_alerts)
+        app.add_handler(check_balance)
+        app.add_handler(buy_crypto)
+        app.add_handler(sell_crypto)
+        app.add_handler(view_portfolio)
 
         main_logger.info("Starting bot...")
         await app.start()
@@ -53,6 +62,7 @@ async def main():
         asyncio.create_task(periodic_news_update())
         asyncio.create_task(auto_quiz_task())
         asyncio.create_task(daily_question_rotation())
+        asyncio.create_task(check_price_alerts())
 
         main_logger.info("Bot is running. Press Ctrl+C to stop.")
         await idle()
